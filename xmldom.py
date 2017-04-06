@@ -32,14 +32,16 @@ class DisabledValidation():
 
     def __enter__(self):
         """Disable validation"""
+        self.require_valid_when_parsing = RequireValidWhenParsing()
+        self.require_valid_when_generating = RequireValidWhenGenerating()
         RequireValidWhenParsing(False)
         RequireValidWhenGenerating(False)
         return self
 
     def __exit__(self, *_):
         """Re-enables validation"""
-        RequireValidWhenParsing(True)
-        RequireValidWhenGenerating(True)
+        RequireValidWhenParsing(self.require_valid_when_parsing)
+        RequireValidWhenGenerating(self.require_valid_when_generating)
 
 
 class DOMWalker():
