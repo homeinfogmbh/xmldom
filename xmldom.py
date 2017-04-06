@@ -25,7 +25,7 @@ def validate(binding):
 
 
 class DisabledValidation():
-    """Disables PyXB validation inside context
+    """Disables PyXB validation within context
 
     XXX: This is NOT thread-safe!
     """
