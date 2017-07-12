@@ -32,18 +32,19 @@ def validate(binding):
         return result
 
 
-def any_contents(dom):
+def any_contents(dom, bds=None):
     """Yields stringified contents of xs:any DOMs"""
-    bds = BindingDOMSupport()
 
     for element in dom.orderedContent():
         if isinstance(element, NonElementContent):
             yield element.value
         elif element.elementDeclaration is None:
+            bds = BindingDOMSupport() if bds is None else bds
+
             if isinstance(element.value, Node):
                 yield bds.cloneIntoImplementation(element.value).toxml()
             else:
-                yield element.value.toDOM(bds).toxml()
+                yield element.value.to_dom(bds).toxml()
         else:
             yield element.value.toXML()
 
