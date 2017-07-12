@@ -1,10 +1,18 @@
 """XML data handling"""
 
 from pyxb import RequireValidWhenParsing, RequireValidWhenGenerating
-from pyxb.exceptions_ import PyXBException
+from pyxb.binding.basis import NonElementContent
 from pyxb.binding.content import _PluralBinding
+from pyxb.exceptions_ import PyXBException
+from pyxb.utils.domutils import BindingDOMSupport
+from xml.dom import Node
 
-__all__ = ['DOMWalkTrip', 'validate', 'DisabledValidation', 'DOMWalker']
+__all__ = [
+    'DOMWalkTrip',
+    'validate',
+    'any_contents',
+    'DisabledValidation',
+    'DOMWalker']
 
 
 class DOMWalkTrip(Exception):
@@ -22,6 +30,22 @@ def validate(binding):
         return False
     else:
         return result
+
+
+def any_contents(dom):
+    """Yields stringified contents of xs:any DOMs"""
+    bds = BindingDOMSupport()
+
+    for element in dom.orderedContent():
+        if isinstance(element, NonElementContent):
+            yield element.value
+        elif element.elementDeclaration is None:
+            if isinstance(element.value, Node):
+                yield bds.cloneIntoImplementation(element.value).toxml()
+            else:
+                yield element.value.toDOM(bds).toxml()
+        else:
+            yield element.value.toXML()
 
 
 class DisabledValidation():
