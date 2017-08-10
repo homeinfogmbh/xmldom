@@ -1,8 +1,8 @@
 """XML data handling"""
 
-from pyxb import RequireValidWhenParsing, RequireValidWhenGenerating
+from pyxb import PyXBException, RequireValidWhenParsing, \
+    RequireValidWhenGenerating
 from pyxb.binding.basis import NonElementContent
-from pyxb.exceptions_ import PyXBException
 from pyxb.utils.domutils import BindingDOMSupport
 from xml.dom import Node
 
