@@ -55,12 +55,19 @@ class DisabledValidation():
     XXX: This is NOT thread-safe!
     """
 
+    def __init__(self, parsing=True, generating=True):
+        """Sets the disabled validation for parsing and / or generating.
+        Defaults to disable validation (True) on both.
+        """
+        self.parsing = parsing
+        self.generating = generating
+
     def __enter__(self):
         """Disable validation"""
         self.require_valid_when_parsing = RequireValidWhenParsing()
         self.require_valid_when_generating = RequireValidWhenGenerating()
-        RequireValidWhenParsing(False)
-        RequireValidWhenGenerating(False)
+        RequireValidWhenParsing(not self.parsing)
+        RequireValidWhenGenerating(not self.generating)
         return self
 
     def __exit__(self, *_):
