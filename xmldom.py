@@ -1,10 +1,11 @@
-"""XML data handling"""
+"""XML data handling."""
+
+from xml.dom import Node
 
 from pyxb import PyXBException, RequireValidWhenParsing, \
     RequireValidWhenGenerating
 from pyxb.binding.basis import NonElementContent
 from pyxb.utils.domutils import BindingDOMSupport
-from xml.dom import Node
 
 __all__ = [
     'validate',
@@ -13,18 +14,16 @@ __all__ = [
 
 
 def validate(binding):
-    """Silently validates a class binding"""
+    """Silently validates a class binding."""
 
     try:
-        result = binding.validateBinding()
+        return binding.validateBinding()
     except PyXBException:
         return False
-    else:
-        return result
 
 
 def any_contents(dom, bds=None):
-    """Yields stringified contents of xs:any DOMs"""
+    """Yields stringified contents of xs:any DOMs."""
 
     for element in dom.orderedContent():
         if isinstance(element, NonElementContent):
@@ -41,9 +40,9 @@ def any_contents(dom, bds=None):
 
 
 class DisabledValidation():
-    """Disables PyXB validation within context
+    """Disables PyXB validation within context.
 
-    XXX: This is NOT thread-safe!
+    This is NOT thread-safe!
     """
 
     def __init__(self, parsing=True, generating=True):
@@ -52,9 +51,11 @@ class DisabledValidation():
         """
         self.parsing = parsing
         self.generating = generating
+        self.require_valid_when_parsing = RequireValidWhenParsing()
+        self.require_valid_when_generating = RequireValidWhenGenerating()
 
     def __enter__(self):
-        """Disable validation"""
+        """Disable validation."""
         self.require_valid_when_parsing = RequireValidWhenParsing()
         self.require_valid_when_generating = RequireValidWhenGenerating()
         RequireValidWhenParsing(not self.parsing)
@@ -62,6 +63,6 @@ class DisabledValidation():
         return self
 
     def __exit__(self, *_):
-        """Re-enables validation"""
+        """Re-enables validation."""
         RequireValidWhenParsing(self.require_valid_when_parsing)
         RequireValidWhenGenerating(self.require_valid_when_generating)
