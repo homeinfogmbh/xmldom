@@ -10,6 +10,7 @@ from pyxb.utils.domutils import BindingDOMSupport
 __all__ = [
     'validate',
     'any_contents',
+    'strval',
     'DisabledValidation']
 
 
@@ -39,7 +40,14 @@ def any_contents(dom, bds=None):
             yield element.value.toXML()
 
 
-class DisabledValidation():
+def strval(element, sep=''):
+    """Converts a non-typed DOM element into a string."""
+
+    if element is not None and element.orderedContent():
+        return sep.join(item.value for item in element.orderedContent())
+
+
+class DisabledValidation:
     """Disables PyXB validation within context.
 
     This is NOT thread-safe!
@@ -48,6 +56,7 @@ class DisabledValidation():
     def __init__(self, parsing=True, generating=True):
         """Sets the disabled validation for parsing and / or generating.
         Defaults to disable validation (True) on both.
+        The respective option will not be changed if it is set to None.
         """
         self.parsing = parsing
         self.generating = generating
@@ -58,11 +67,19 @@ class DisabledValidation():
         """Disable validation."""
         self.require_valid_when_parsing = RequireValidWhenParsing()
         self.require_valid_when_generating = RequireValidWhenGenerating()
-        RequireValidWhenParsing(not self.parsing)
-        RequireValidWhenGenerating(not self.generating)
+
+        if self.parsing is not None:
+            RequireValidWhenParsing(not self.parsing)
+
+        if self.generating is not None:
+            RequireValidWhenGenerating(not self.generating)
+
         return self
 
     def __exit__(self, *_):
         """Re-enables validation."""
-        RequireValidWhenParsing(self.require_valid_when_parsing)
-        RequireValidWhenGenerating(self.require_valid_when_generating)
+        if self.parsing is not None:
+            RequireValidWhenParsing(self.require_valid_when_parsing)
+
+        if self.generating is not None:
+            RequireValidWhenGenerating(self.require_valid_when_generating)
