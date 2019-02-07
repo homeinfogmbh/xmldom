@@ -2,16 +2,14 @@
 
 from xml.dom import Node
 
-from pyxb import PyXBException, RequireValidWhenParsing, \
-    RequireValidWhenGenerating
+from pyxb import PyXBException
+from pyxb import RequireValidWhenParsing
+from pyxb import RequireValidWhenGenerating
 from pyxb.binding.basis import NonElementContent
 from pyxb.utils.domutils import BindingDOMSupport
 
-__all__ = [
-    'validate',
-    'any_contents',
-    'strval',
-    'DisabledValidation']
+
+__all__ = ['validate', 'any_contents', 'strval', 'DisabledValidation']
 
 
 def validate(binding):
@@ -45,6 +43,8 @@ def strval(element, sep=''):
 
     if element is not None and element.orderedContent():
         return sep.join(item.value for item in element.orderedContent())
+
+    return None
 
 
 class DisabledValidation:
