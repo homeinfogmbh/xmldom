@@ -1,5 +1,7 @@
 """XML data handling."""
 
+from contextlib import suppress
+from tempfile import NamedTemporaryFile
 from xml.dom import Node
 
 from pyxb import PyXBException
@@ -9,16 +11,13 @@ from pyxb.binding.basis import NonElementContent
 from pyxb.utils.domutils import BindingDOMSupport
 
 
-__all__ = ['validate', 'any_contents', 'strval', 'DisabledValidation']
-
-
-def validate(binding):
-    """Silently validates a class binding."""
-
-    try:
-        return binding.validateBinding()
-    except PyXBException:
-        return False
+__all__ = [
+    'any_contents',
+    'dump',
+    'strval',
+    'validate',
+    'DebugDOMErrors',
+    'DisabledValidation']
 
 
 def any_contents(dom, bds=None):
@@ -38,6 +37,16 @@ def any_contents(dom, bds=None):
             yield element.value.toXML()
 
 
+def dump(dom, encoding='utf-8'):
+    """Dumps the dom to a temporary file."""
+
+    with NamedTemporaryFile('wb', suffix='.xml', delete=False) as tmp:
+        with DisabledValidation():
+            tmp.write(dom.toxml(encoding=encoding))
+
+    print('XML dumped to:', tmp.name, flush=True)
+
+
 def strval(element, sep=''):
     """Converts a non-typed DOM element into a string."""
 
@@ -45,6 +54,36 @@ def strval(element, sep=''):
         return sep.join(item.value for item in element.orderedContent())
 
     return None
+
+
+def validate(binding):
+    """Silently validates a class binding."""
+
+    try:
+        return binding.validateBinding()
+    except PyXBException:
+        return False
+
+
+class DebugDOMErrors:
+    """Debugs errors of the given DOM."""
+
+    def __init__(self, dom, encoding='utf-8'):
+        """Sets the DOM."""
+        self.dom = dom
+        self.encoding = encoding
+
+    def __enter__(self):
+        """Enters a context."""
+        return self
+
+    def __exit__(self, typ, value, traceback):
+        """Dumps the DOM on errors."""
+        if isinstance(value, PyXBException):
+            dump(self.dom, encoding=self.encoding)
+
+            with suppress(AttributeError):
+                print('Exceptions details:', value.details())
 
 
 class DisabledValidation:
