@@ -89,11 +89,9 @@ class DebugDOMErrors:
 
 
 class DisabledValidation:
-    """Disables PyXB validation within context.
+    """Disables PyXB validation within context."""
 
-    This is NOT thread-safe!
-    """
-
+    # Locks for thread- and multiprocessing-safety.
     _PROCESS_LOCK = ProcessLock()
     _THREAD_LOCK = ThreadLock()
 
