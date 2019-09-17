@@ -1,7 +1,9 @@
 """XML data handling."""
 
 from contextlib import suppress
+from multiprocessing import Lock as ProcessLock
 from tempfile import NamedTemporaryFile
+from threading import Lock as ThreadLock
 from xml.dom import Node
 
 from pyxb import PyXBException
@@ -92,6 +94,9 @@ class DisabledValidation:
     This is NOT thread-safe!
     """
 
+    _PROCESS_LOCK = ProcessLock()
+    _THREAD_LOCK = ThreadLock()
+
     def __init__(self, parsing=True, generating=True):
         """Sets the disabled validation for parsing and / or generating.
         Defaults to disable validation (True) on both.
@@ -104,6 +109,8 @@ class DisabledValidation:
 
     def __enter__(self):
         """Disable validation."""
+        self._PROCESS_LOCK.acquire()
+        self._THREAD_LOCK.acquire()
         self.require_valid_when_parsing = RequireValidWhenParsing()
         self.require_valid_when_generating = RequireValidWhenGenerating()
 
@@ -122,3 +129,6 @@ class DisabledValidation:
 
         if self.generating is not None:
             RequireValidWhenGenerating(self.require_valid_when_generating)
+
+        self._PROCESS_LOCK.release()
+        self._THREAD_LOCK.release()
