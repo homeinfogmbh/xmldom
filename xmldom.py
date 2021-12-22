@@ -4,11 +4,14 @@ from contextlib import suppress
 from multiprocessing import Lock as ProcessLock
 from tempfile import NamedTemporaryFile
 from threading import Lock as ThreadLock
+from typing import Iterator, Optional
 from xml.dom import Node
 
 from pyxb import PyXBException
 from pyxb import RequireValidWhenParsing
 from pyxb import RequireValidWhenGenerating
+from pyxb.binding.basis import _Content
+from pyxb.binding.basis import complexTypeDefinition
 from pyxb.binding.basis import NonElementContent
 from pyxb.utils.domutils import BindingDOMSupport
 
@@ -19,27 +22,36 @@ __all__ = [
     'strval',
     'validate',
     'DebugDOMErrors',
-    'DisabledValidation']
+    'DisabledValidation'
+]
 
 
-def any_contents(dom, bds=None):
+BDS = BindingDOMSupport()
+
+
+def get_string_value(content: _Content) -> str:
+    """Returns the string value of the given content."""
+
+    if isinstance(content, NonElementContent):
+        return content.value
+
+    if content.elementDeclaration is None:
+        if isinstance(content.value, Node):
+            return BDS.cloneIntoImplementation(content.value).toxml()
+
+        return content.value.to_dom(BDS).toxml()
+
+    return content.value.toXML()
+
+
+def any_contents(element: complexTypeDefinition) -> Iterator[str]:
     """Yields stringified contents of xs:any DOMs."""
 
-    for element in dom.orderedContent():
-        if isinstance(element, NonElementContent):
-            yield element.value
-        elif element.elementDeclaration is None:
-            bds = BindingDOMSupport() if bds is None else bds
-
-            if isinstance(element.value, Node):
-                yield bds.cloneIntoImplementation(element.value).toxml()
-            else:
-                yield element.value.to_dom(bds).toxml()
-        else:
-            yield element.value.toXML()
+    for content in element.orderedContent():
+        yield get_string_value(content)
 
 
-def dump(dom, encoding='utf-8'):
+def dump(dom: complexTypeDefinition, *, encoding: str = 'utf-8') -> None:
     """Dumps the dom to a temporary file."""
 
     with NamedTemporaryFile('wb', suffix='.xml', delete=False) as tmp:
@@ -49,16 +61,17 @@ def dump(dom, encoding='utf-8'):
     print('XML dumped to:', tmp.name, flush=True)
 
 
-def strval(element, sep=''):
+def strval(element: Optional[complexTypeDefinition], *,
+           sep: str = '') -> Optional[str]:
     """Converts a non-typed DOM element into a string."""
 
-    if element is not None and element.orderedContent():
-        return sep.join(item.value for item in element.orderedContent())
+    if element is not None and (content := element.orderedContent()):
+        return sep.join(item.value for item in content)
 
     return None
 
 
-def validate(binding):
+def validate(binding: complexTypeDefinition) -> bool:
     """Silently validates a class binding."""
 
     try:
@@ -70,7 +83,7 @@ def validate(binding):
 class DebugDOMErrors:
     """Debugs errors of the given DOM."""
 
-    def __init__(self, dom, encoding='utf-8'):
+    def __init__(self, dom: complexTypeDefinition, *, encoding: str = 'utf-8'):
         """Sets the DOM."""
         self.dom = dom
         self.encoding = encoding
@@ -95,7 +108,7 @@ class DisabledValidation:
     _PROCESS_LOCK = ProcessLock()
     _THREAD_LOCK = ThreadLock()
 
-    def __init__(self, parsing=True, generating=True):
+    def __init__(self, parsing: bool = True, generating: bool = True):
         """Sets the disabled validation for parsing and / or generating.
         Defaults to disable validation (True) on both.
         The respective option will not be changed if it is set to None.
