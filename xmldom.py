@@ -17,12 +17,12 @@ from pyxb.utils.domutils import BindingDOMSupport
 
 
 __all__ = [
-    'any_contents',
-    'dump',
-    'strval',
-    'validate',
-    'DebugDOMErrors',
-    'DisabledValidation'
+    "any_contents",
+    "dump",
+    "strval",
+    "validate",
+    "DebugDOMErrors",
+    "DisabledValidation",
 ]
 
 
@@ -51,18 +51,17 @@ def any_contents(element: complexTypeDefinition) -> Iterator[str]:
         yield get_string_value(content)
 
 
-def dump(dom: complexTypeDefinition, *, encoding: str = 'utf-8') -> None:
+def dump(dom: complexTypeDefinition, *, encoding: str = "utf-8") -> None:
     """Dumps the dom to a temporary file."""
 
-    with NamedTemporaryFile('wb', suffix='.xml', delete=False) as tmp:
+    with NamedTemporaryFile("wb", suffix=".xml", delete=False) as tmp:
         with DisabledValidation():
             tmp.write(dom.toxml(encoding=encoding))
 
-    print('XML dumped to:', tmp.name, flush=True)
+    print("XML dumped to:", tmp.name, flush=True)
 
 
-def strval(element: Optional[complexTypeDefinition], *,
-           sep: str = '') -> Optional[str]:
+def strval(element: Optional[complexTypeDefinition], *, sep: str = "") -> Optional[str]:
     """Converts a non-typed DOM element into a string."""
 
     if element is not None and (content := element.orderedContent()):
@@ -83,7 +82,7 @@ def validate(binding: complexTypeDefinition) -> bool:
 class DebugDOMErrors:
     """Debugs errors of the given DOM."""
 
-    def __init__(self, dom: complexTypeDefinition, *, encoding: str = 'utf-8'):
+    def __init__(self, dom: complexTypeDefinition, *, encoding: str = "utf-8"):
         """Sets the DOM."""
         self.dom = dom
         self.encoding = encoding
@@ -98,7 +97,7 @@ class DebugDOMErrors:
             dump(self.dom, encoding=self.encoding)
 
             with suppress(AttributeError):
-                print('Exceptions details:', value.details())
+                print("Exceptions details:", value.details())
 
 
 class DisabledValidation:
